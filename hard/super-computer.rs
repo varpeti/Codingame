@@ -11,66 +11,83 @@ macro_rules! parse_input {
     };
 }
 
+macro_rules! set {
+    ( $( $x:expr ),* ) => {  // Match zero or more comma delimited items
+        {
+            let mut temp_set = HashSet::new();  // Create a mutable HashSet
+            $(
+                temp_set.insert($x); // Insert each item matched into the HashSet
+            )*
+            temp_set // Return the populated HashSet
+        }
+    };
+}
+
 fn main() {
     let mut input = String::new();
     let mut stdin = unsafe { File::from_raw_fd(0) };
     stdin.read_to_string(&mut input).unwrap();
 
-    let data = input
-        .trim()
-        .split("\n")
-        .skip(1)
-        .map(|line| line.split(" ").take(2))
-        .map(|mut t| {
-            Interval::new(
-                parse_input!(t.next().unwrap(), usize),
-                parse_input!(t.next().unwrap(), usize),
-            )
-        });
+    let mut data = input.trim().split("\n");
+    let length = parse_input!(data.next().unwrap(), usize);
+    let mut data = data.map(|line| line.split(" ").take(2)).map(|mut t| {
+        Interval::new(
+            parse_input!(t.next().unwrap(), usize),
+            parse_input!(t.next().unwrap(), usize),
+        )
+    });
 
-    let mut root = Node::new(Interval { low: 0, high: 0 });
+    let mut root = Node::new(data.next().unwrap());
+    let mut cols = HashMap::<(usize, usize), HashSet<(usize, usize)>>::new();
 
     for i in data {
-        let todo_remove_j = Interval {
+        if let Some(j) = root.search_overlap(Interval {
             low: i.low,
             high: i.high,
-        };
-        let j = Interval {
-            low: i.low,
-            high: i.high,
-        };
-        println!("{:?} overlaps {:?}", todo_remove_j, root.search_overlap(i));
-        root.insert(j);
-    }
-    eprintln!("{:#?}", root);
-
-    /*
-
-    //TODO Find a way to collect cols directly
-    let mut cols = HashMap::<usize, HashSet<&usize>>::new();
-    for v in all.iter().filter(|v| v.1.len() > 1) {
-        for id in v.1 {
-            match cols.get_mut(id) {
-                None    => { cols.insert(*id, v.1.iter().collect()); },
-                Some(h) => { for i in v.1 {h.insert(i);} },
-            };
+        }) {
+            match cols.get_mut(&(i.low, i.high)) {
+                None => {
+                    cols.insert((i.low, i.high), set![(j.low, j.high)]);
+                }
+                Some(h) => {
+                    h.insert((j.low, j.high));
+                }
+            }
+            match cols.get_mut(&(j.low, j.high)) {
+                None => {
+                    cols.insert((j.low, j.high), set![(i.low, i.high)]);
+                }
+                Some(h) => {
+                    h.insert((i.low, i.high));
+                }
+            }
         }
+        root.insert(i);
     }
+    //eprintln!("{:#?}", cols);
+    //eprintln!("{:#?}", root);
 
+    //Todo better reducer (or better interval tree?)
     let mut removed = 0;
     loop {
         let max = *(cols.iter().map(|v| (v.1.len(), v.0)).max().unwrap().1);
         cols.remove(&max);
-        for v in cols.iter_mut() { v.1.remove(&max);}
+        for v in cols.iter_mut() {
+            v.1.remove(&max);
+        }
         removed += 1;
         for v in cols.clone().iter() {
-            if v.1.len() < 2 { cols.remove(&v.0); }
+            if v.1.len() < 2 {
+                cols.remove(&v.0);
+            }
         }
-        eprintln!("{:?}", cols);
-        if cols.is_empty() {break;}
+        //eprintln!("{:#?}", cols.len());
+        if cols.is_empty() {
+            break;
+        }
     }
 
-    println!("{}", (length-removed)); */
+    println!("{}", (length - removed));
 }
 
 // Rewritten from GeekForGeeeks c++ implementation (https://www.geeksforgeeks.org/interval-tree/)
