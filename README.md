@@ -1,2 +1,2 @@
-# Codeingame
+# Codingame
 My Codingame.com solutions
