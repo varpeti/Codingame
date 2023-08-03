@@ -11,7 +11,7 @@ macro_rules! p{
 fn main() {
     let mut l; rs!(l); let mut s = p!(l, " ");
     let (nb_floors, width, nb_rounds, exit_floor, exit_pos, _nb_total_clones, _nb_additional_elevators, nb_elevators) = p!(s, 
-         u8,        u8,    u8,        u8,        i8,             u8,               u8,                       usize);
+         u8,        u8,    u8,        u8,         i8,       u8,               u8,                       usize);
     let mut elevators = vec!(0; nb_elevators);
     for _ in 0..nb_elevators {
         rs!(l); s = p!(l, " ");
