@@ -89,7 +89,7 @@ where
     let mut cost_and_parent = HashMap::<N, (usize, Option<N>)>::new();
     let mut visited = HashSet::<N>::new();
 
-    priority_queue.push(AstarNode::new(start_node.clone(), 0, 0)));
+    priority_queue.push(AstarNode::new(start_node.clone(), 0, 0));
     cost_and_parent.insert(start_node.clone(), (0, None));
 
     while let Some(current) = priority_queue.pop() {
